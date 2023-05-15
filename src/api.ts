@@ -10,9 +10,11 @@ const request = require('request');
 const jwtCheck = expressjwt({
   secret: jwks.expressJwtSecret({
     cache: true,
-
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
     jwksUri: 'https://dev-axsaao7td1bsb2ol.us.auth0.com/.well-known/jwks.json'
   }),
+  issuer: "https://dev-axsaao7td1bsb2ol.us.auth0.com/",
   audience: 'https://dev-axsaao7td1bsb2ol.us.auth0.com/api/v2/',
   algorithms: ['RS256']
 });
@@ -23,7 +25,7 @@ app.use(express.raw({ type: 'application/vnd.custom-type' }));
 app.use(express.text({ type: 'text/html' }));
 
 let movies;
-
+let token;
 async function getMovies() {
   await fetch(
     `https://api.themoviedb.org/3/movie/popular?api_key=${process.env.API_KEY}`
@@ -77,12 +79,13 @@ api.get('/get-token', async (req, res) => {
       }
     },
 
-    function (error, response, body) {
+    async function (error, response, body) {
       if (error) {
         res.status(400);
         res.send(error);
       }
       res.send(body);
+
     }
   );
 });
